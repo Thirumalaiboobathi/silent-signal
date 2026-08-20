@@ -1,0 +1,170 @@
+import { Outcome, ThrashWindow, ToolCall } from "./types";
+
+export const MOCK_TOOL_CALLS: ToolCall[] = [
+  {
+    id: "tc_001",
+    toolName: "search_flights",
+    timestamp: "2026-08-20T09:12:03.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Found 4 flights from BOM to SFO"}]}`,
+    outcome: "SUCCESS",
+    fingerprint: "a1b2c3d4e5f60718",
+    argsHash: "h_9f21",
+    summary: "Returned 4 flight options.",
+    sessionId: "sess_alpha",
+  },
+  {
+    id: "tc_002",
+    toolName: "book_hotel",
+    timestamp: "2026-08-20T09:13:41.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Error: no rooms available"}],"isError":true}`,
+    outcome: "TOOL_ERROR",
+    fingerprint: "b2c3d4e5f6071829",
+    argsHash: "h_3d77",
+    summary: "Tool reported isError: true — no rooms available.",
+    sessionId: "sess_alpha",
+  },
+  {
+    id: "tc_003",
+    toolName: "get_weather",
+    timestamp: "2026-08-20T09:14:02.000Z",
+    rawPayload: `{"content":[]}`,
+    outcome: "EMPTY_RESULT",
+    fingerprint: "c3d4e5f607182930",
+    argsHash: "h_1a44",
+    summary: "Content array was empty.",
+    sessionId: "sess_alpha",
+  },
+  {
+    id: "tc_004",
+    toolName: "get_weather",
+    timestamp: "2026-08-20T09:14:35.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"   "}]}`,
+    outcome: "EMPTY_RESULT",
+    fingerprint: "c3d4e5f607182930",
+    argsHash: "h_1a44",
+    summary: "All text blocks were blank or whitespace.",
+    sessionId: "sess_alpha",
+  },
+  {
+    id: "tc_005",
+    toolName: "fetch_invoice",
+    timestamp: "2026-08-20T09:15:10.000Z",
+    rawPayload: `{"result": "not valid json`,
+    outcome: "MALFORMED",
+    fingerprint: "d4e5f60718293041",
+    argsHash: "h_7be2",
+    summary: "JSON.parse failed on raw payload.",
+    sessionId: "sess_beta",
+  },
+  {
+    id: "tc_006",
+    toolName: "list_contacts",
+    timestamp: "2026-08-20T09:15:59.000Z",
+    rawPayload: `{"items":["a","b"]}`,
+    outcome: "MALFORMED",
+    fingerprint: "e5f6071829304152",
+    argsHash: "h_5c19",
+    summary: "Response is missing the content field entirely.",
+    sessionId: "sess_beta",
+  },
+  {
+    id: "tc_007",
+    toolName: "get_account_balance",
+    timestamp: "2026-08-20T09:16:20.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Balance: $482.10"}],"meta":{"currency":"USD"}}`,
+    outcome: "SCHEMA_DRIFT",
+    fingerprint: "f60718293041526a",
+    argsHash: "h_8f02",
+    summary: "toolName previously returned different top-level keys.",
+    sessionId: "sess_beta",
+  },
+  {
+    id: "tc_008",
+    toolName: "search_flights",
+    timestamp: "2026-08-20T09:17:01.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Found 2 flights from BOM to SFO"}]}`,
+    outcome: "SUCCESS",
+    fingerprint: "a1b2c3d4e5f60718",
+    argsHash: "h_9f21",
+    summary: "Returned 2 flight options.",
+    sessionId: "sess_gamma",
+  },
+  {
+    id: "tc_009",
+    toolName: "send_email",
+    timestamp: "2026-08-20T09:18:12.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Error: SMTP timeout after 30s"}],"isError":true}`,
+    outcome: "TOOL_ERROR",
+    fingerprint: "071829304152637c",
+    argsHash: "h_2b90",
+    summary: "Tool reported isError: true — SMTP timeout.",
+    sessionId: "sess_gamma",
+  },
+  {
+    id: "tc_010",
+    toolName: "send_email",
+    timestamp: "2026-08-20T09:18:20.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Error: SMTP timeout after 30s"}],"isError":true}`,
+    outcome: "TOOL_ERROR",
+    fingerprint: "071829304152637c",
+    argsHash: "h_2b90",
+    summary: "Tool reported isError: true — SMTP timeout.",
+    sessionId: "sess_gamma",
+  },
+  {
+    id: "tc_011",
+    toolName: "send_email",
+    timestamp: "2026-08-20T09:18:29.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Error: SMTP timeout after 30s"}],"isError":true}`,
+    outcome: "TOOL_ERROR",
+    fingerprint: "071829304152637c",
+    argsHash: "h_2b90",
+    summary: "Tool reported isError: true — SMTP timeout. Thrashed 3x in 60s.",
+    sessionId: "sess_gamma",
+  },
+  {
+    id: "tc_012",
+    toolName: "get_account_balance",
+    timestamp: "2026-08-20T09:19:44.000Z",
+    rawPayload: `{"content":[{"type":"text","text":"Balance: $1,204.55"}]}`,
+    outcome: "SUCCESS",
+    fingerprint: "182930415263748d",
+    argsHash: "h_8f02",
+    summary: "Returned account balance.",
+    sessionId: "sess_delta",
+  },
+];
+
+export const MOCK_THRASH_WINDOWS: ThrashWindow[] = [
+  {
+    id: "thr_001",
+    toolName: "send_email",
+    sessionId: "sess_gamma",
+    argsHash: "h_2b90",
+    count: 3,
+    windowStart: "2026-08-20T09:18:12.000Z",
+    windowEnd: "2026-08-20T09:18:29.000Z",
+    callIds: ["tc_009", "tc_010", "tc_011"],
+  },
+];
+
+export function silentFailureCount(calls: ToolCall[] = MOCK_TOOL_CALLS): number {
+  return calls.filter((c) => c.outcome !== "SUCCESS").length;
+}
+
+export function fingerprintFrequency(
+  calls: ToolCall[] = MOCK_TOOL_CALLS
+): { fingerprint: string; toolName: string; outcome: Outcome; count: number }[] {
+  const map = new Map<string, { toolName: string; outcome: Outcome; count: number }>();
+  for (const c of calls) {
+    const existing = map.get(c.fingerprint);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      map.set(c.fingerprint, { toolName: c.toolName, outcome: c.outcome, count: 1 });
+    }
+  }
+  return Array.from(map.entries())
+    .map(([fingerprint, v]) => ({ fingerprint, ...v }))
+    .sort((a, b) => b.count - a.count);
+}
