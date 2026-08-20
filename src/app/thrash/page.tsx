@@ -1,7 +1,19 @@
-import { MOCK_THRASH_WINDOWS } from "@/lib/mock-data";
+import { detectThrash } from "@/lib/thrash";
+import { listToolCalls } from "@/lib/tool-calls";
 
-export default function Thrash() {
-  const windows = MOCK_THRASH_WINDOWS;
+export const dynamic = "force-dynamic";
+
+export default async function Thrash() {
+  const calls = await listToolCalls();
+  const windows = detectThrash(
+    calls.map((c) => ({
+      id: c.id,
+      toolName: c.toolName,
+      argsHash: c.argsHash,
+      sessionId: c.sessionId,
+      timestamp: c.timestamp,
+    }))
+  ).sort((a, b) => Date.parse(b.windowStart) - Date.parse(a.windowStart));
 
   return (
     <div className="space-y-8">

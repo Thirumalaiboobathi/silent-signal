@@ -1,16 +1,13 @@
 import OutcomeBadge from "@/components/OutcomeBadge";
-import {
-  MOCK_TOOL_CALLS,
-  fingerprintFrequency,
-  silentFailureCount,
-} from "@/lib/mock-data";
+import { fingerprintFrequency, silentFailureCount } from "@/lib/derive";
+import { listToolCalls } from "@/lib/tool-calls";
 
-export default function Dashboard() {
-  const calls = [...MOCK_TOOL_CALLS].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-  const failures = silentFailureCount();
-  const fingerprints = fingerprintFrequency();
+export const dynamic = "force-dynamic";
+
+export default async function Dashboard() {
+  const calls = await listToolCalls();
+  const failures = silentFailureCount(calls);
+  const fingerprints = fingerprintFrequency(calls);
 
   return (
     <div className="space-y-8">
@@ -33,68 +30,82 @@ export default function Dashboard() {
 
       <section>
         <h2 className="text-sm font-medium text-muted">Recent calls</h2>
-        <div className="mt-3 overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th className="px-4 py-3 font-medium">Tool</th>
-                <th className="px-4 py-3 font-medium">Outcome</th>
-                <th className="px-4 py-3 font-medium">Fingerprint</th>
-                <th className="px-4 py-3 font-medium">Session</th>
-                <th className="px-4 py-3 font-medium">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-surface-raised">
-              {calls.map((call) => (
-                <tr key={call.id}>
-                  <td className="px-4 py-3 font-mono text-foreground">
-                    {call.toolName}
-                  </td>
-                  <td className="px-4 py-3">
-                    <OutcomeBadge outcome={call.outcome} />
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted">
-                    {call.fingerprint}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted">
-                    {call.sessionId}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted">
-                    {new Date(call.timestamp).toLocaleString()}
-                  </td>
+        {calls.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="mt-3 overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Tool</th>
+                  <th className="px-4 py-3 font-medium">Outcome</th>
+                  <th className="px-4 py-3 font-medium">Fingerprint</th>
+                  <th className="px-4 py-3 font-medium">Session</th>
+                  <th className="px-4 py-3 font-medium">Timestamp</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border bg-surface-raised">
+                {calls.map((call) => (
+                  <tr key={call.id}>
+                    <td className="px-4 py-3 font-mono text-foreground">
+                      {call.toolName}
+                    </td>
+                    <td className="px-4 py-3">
+                      <OutcomeBadge outcome={call.outcome} />
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted">
+                      {call.fingerprint}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted">
+                      {call.sessionId}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted">
+                      {new Date(call.timestamp).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
-      <section>
-        <h2 className="text-sm font-medium text-muted">
-          Fingerprints by frequency
-        </h2>
-        <div className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface-raised">
-          {fingerprints.map((fp) => (
-            <div
-              key={fp.fingerprint}
-              className="flex items-center justify-between px-4 py-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs text-muted">
-                  {fp.fingerprint}
+      {fingerprints.length > 0 && (
+        <section>
+          <h2 className="text-sm font-medium text-muted">
+            Fingerprints by frequency
+          </h2>
+          <div className="mt-3 divide-y divide-border rounded-lg border border-border bg-surface-raised">
+            {fingerprints.map((fp) => (
+              <div
+                key={fp.fingerprint}
+                className="flex items-center justify-between px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-muted">
+                    {fp.fingerprint}
+                  </span>
+                  <span className="font-mono text-sm text-foreground">
+                    {fp.toolName}
+                  </span>
+                  <OutcomeBadge outcome={fp.outcome} />
+                </div>
+                <span className="text-sm font-medium text-foreground">
+                  {fp.count}×
                 </span>
-                <span className="font-mono text-sm text-foreground">
-                  {fp.toolName}
-                </span>
-                <OutcomeBadge outcome={fp.outcome} />
               </div>
-              <span className="text-sm font-medium text-foreground">
-                {fp.count}×
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="mt-3 rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted">
+      No calls yet — paste a payload on the Verify page to get started.
     </div>
   );
 }

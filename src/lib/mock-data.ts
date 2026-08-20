@@ -1,4 +1,4 @@
-import { Outcome, ThrashWindow, ToolCall } from "./types";
+import { ThrashWindow, ToolCall } from "./types";
 
 export const MOCK_TOOL_CALLS: ToolCall[] = [
   {
@@ -147,24 +147,3 @@ export const MOCK_THRASH_WINDOWS: ThrashWindow[] = [
     callIds: ["tc_009", "tc_010", "tc_011"],
   },
 ];
-
-export function silentFailureCount(calls: ToolCall[] = MOCK_TOOL_CALLS): number {
-  return calls.filter((c) => c.outcome !== "SUCCESS").length;
-}
-
-export function fingerprintFrequency(
-  calls: ToolCall[] = MOCK_TOOL_CALLS
-): { fingerprint: string; toolName: string; outcome: Outcome; count: number }[] {
-  const map = new Map<string, { toolName: string; outcome: Outcome; count: number }>();
-  for (const c of calls) {
-    const existing = map.get(c.fingerprint);
-    if (existing) {
-      existing.count += 1;
-    } else {
-      map.set(c.fingerprint, { toolName: c.toolName, outcome: c.outcome, count: 1 });
-    }
-  }
-  return Array.from(map.entries())
-    .map(([fingerprint, v]) => ({ fingerprint, ...v }))
-    .sort((a, b) => b.count - a.count);
-}
