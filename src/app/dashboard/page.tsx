@@ -39,6 +39,7 @@ export default async function Dashboard() {
                 <tr>
                   <th className="px-4 py-3 font-medium">Tool</th>
                   <th className="px-4 py-3 font-medium">Outcome</th>
+                  <th className="px-4 py-3 font-medium">Summary</th>
                   <th className="px-4 py-3 font-medium">Fingerprint</th>
                   <th className="px-4 py-3 font-medium">Session</th>
                   <th className="px-4 py-3 font-medium">Timestamp</th>
@@ -52,6 +53,12 @@ export default async function Dashboard() {
                     </td>
                     <td className="px-4 py-3">
                       <OutcomeBadge outcome={call.outcome} />
+                    </td>
+                    <td
+                      className="max-w-xs truncate px-4 py-3 text-xs text-muted"
+                      title={call.summary ?? undefined}
+                    >
+                      {call.summary ?? "—"}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-muted">
                       {call.fingerprint}

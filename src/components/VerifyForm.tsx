@@ -12,6 +12,7 @@ interface VerdictState {
   outcome: Outcome;
   fingerprint: string;
   reason: string;
+  summary: string | null;
 }
 
 function getOrCreateSessionId(): string {
@@ -54,6 +55,7 @@ export default function VerifyForm() {
         outcome: body.call.outcome,
         fingerprint: body.call.fingerprint,
         reason: body.reason,
+        summary: body.call.summary,
       });
       setStatus("idle");
     } catch (err) {
@@ -151,6 +153,14 @@ export default function VerifyForm() {
             <dt className="text-sm text-muted">Why</dt>
             <dd className="mt-0.5 text-sm text-foreground">{verdict.reason}</dd>
           </div>
+          {verdict.summary && (
+            <div className="mt-4">
+              <dt className="text-sm text-muted">Summary</dt>
+              <dd className="mt-0.5 text-sm text-foreground">
+                {verdict.summary}
+              </dd>
+            </div>
+          )}
         </div>
       )}
     </div>

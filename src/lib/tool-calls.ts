@@ -1,6 +1,7 @@
 import { client } from "./data-client";
 import { classify } from "./classify";
 import { computeArgsHash, computeFingerprint } from "./fingerprint";
+import { generateSummary } from "./summary";
 import { Outcome, ToolCall } from "./types";
 
 interface ToolCallRow {
@@ -91,6 +92,12 @@ export async function ingestToolCall(
   // arguments, so the payload itself stands in as the dedupe key: identical
   // repeated pastes hash the same way real repeated args would.
   const argsHash = computeArgsHash(input.rawPayload);
+  const summary = await generateSummary(
+    input.toolName,
+    result.outcome,
+    result.reason,
+    input.rawPayload
+  );
 
   const { data, errors } = await client.models.ToolCall.create({
     toolName: input.toolName,
@@ -99,6 +106,7 @@ export async function ingestToolCall(
     outcome: result.outcome,
     fingerprint,
     argsHash,
+    summary,
     sessionId: input.sessionId,
   });
 

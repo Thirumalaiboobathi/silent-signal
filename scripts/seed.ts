@@ -10,6 +10,7 @@
 import { classify } from "../src/lib/classify";
 import { client } from "../src/lib/data-client";
 import { computeArgsHash, computeFingerprint } from "../src/lib/fingerprint";
+import { generateSummary } from "../src/lib/summary";
 import { detectThrash } from "../src/lib/thrash";
 import { Outcome } from "../src/lib/types";
 
@@ -256,6 +257,12 @@ async function seed(): Promise<void> {
     );
     const argsHash = computeArgsHash(scenario.rawPayload);
     const timestamp = new Date(now - scenario.offsetSeconds * 1000).toISOString();
+    const summary = await generateSummary(
+      scenario.toolName,
+      result.outcome,
+      result.reason,
+      scenario.rawPayload
+    );
 
     const { data, errors } = await client.models.ToolCall.create({
       toolName: scenario.toolName,
@@ -264,6 +271,7 @@ async function seed(): Promise<void> {
       outcome: result.outcome,
       fingerprint,
       argsHash,
+      summary,
       sessionId: scenario.sessionId,
     });
 
